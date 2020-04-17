@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'org.multi-os-engine.community', name: 'moe-gradle', version: '1.5.1'
+    }
+}
+
+apply plugin: 'moe'
+
+// keep .natjgen file
+System.properties.put("moe.keep.natjgen", "true")
+
+task copySampleHeader(group: 'dev', type: Copy) {
+    // https://github.com/multi-os-engine/moe-natjgen/blob/moe-master/src/main/java/org/moe/natjgen/Indexer.java#L277
+    // Ignored in standard header path, so copy file.
+    // 
+    from '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/sqlite3.h'
+    into 'include/copy'
+}
+moeNatJGen.mustRunAfter copySampleHeader
+
+task natjgenSample(group: 'dev') {
+    dependsOn copySampleHeader, moeNatJGen
+}
+
+moe {
+    natjgen {
+        config 'sample.nbc'
+        logFile 'sample.log.html'
+    }
+}

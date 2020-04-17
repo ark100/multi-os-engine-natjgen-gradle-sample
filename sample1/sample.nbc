@@ -1,0 +1,17 @@
+{
+    "output":"./src/main/java",
+    "platform":"iOS",
+    "bindings":[
+        {
+            "type":"header",
+            "name":"Sample",
+            "objcClassGenerationMode":"Binding",
+            "headerPath":"include/",
+            "headerSearchPaths":[],
+            "userHeaderSearchPaths":[],
+            "frameworkSearchPaths":[],
+            "packageBase":"com.example.bindings.sample",
+            "importCode":"#include <copy/sqlite3.h>"
+        }
+    ]
+}
