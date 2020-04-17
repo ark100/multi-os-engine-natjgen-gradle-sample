@@ -1,0 +1,15 @@
+{
+    "output":"./src/main/java",
+    "platform":"iOS",
+    "inline-function-binding-output":"src/native",
+    "bindings":[
+        {
+            "type":"framework",
+            "name":"CoreData",
+            "objcClassGenerationMode":"Binding",
+            "frameworkPath":"include/copy/CoreData.framework",
+            "packageBase":"com.example.bindings.coredata",
+            "importCode":"#import <CoreData/CoreData.h>\n#import <CoreData/CoreDataDefines.h>"
+        }
+    ]
+}

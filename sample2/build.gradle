@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'org.multi-os-engine.community', name: 'moe-gradle', version: '1.5.1'
+    }
+}
+
+apply plugin: 'moe'
+
+project.ext.sysPropStack = []
+def putM(dst,src){
+    return src.collectEntries { k,v -> [k, v==null ? dst.remove(k) : dst.put(k,v)] }
+}
+def pushSysProp(m) {
+    sysPropStack.push( putM(System.properties, m) )
+}
+def popSysProp(){
+    putM(System.properties, sysPropStack.pop())
+}
+
+def createNatjgenTask(Map namedParam=[:], name, conf){
+    return createNatjgenTask(namedParam, name, conf, null)
+}
+def createNatjgenTask(Map namedParam=[:], name, conf, Closure c){
+    def logFileArg      = namedParam.getOrDefault('logFile', "${conf}.log.html")
+    def keepNatjgenFile = namedParam.getOrDefault('keepNatjgenFile', true)
+    
+    def t = task "${name}"(group:'dev', type: org.moe.gradle.tasks.NatJGen) {
+        setupMoeTask()
+        doFirst {
+            if(keepNatjgenFile){ pushSysProp(["moe.keep.natjgen": "true"]) }
+            moe.natjgen {
+                config conf
+                logFile logFileArg
+            }
+        }
+        doLast {
+            if(keepNatjgenFile){ popSysProp() }
+        }
+        if(c != null){
+            c.delegate = delegate
+            c.call()
+        }
+    }
+    return t
+}
+
+// https://github.com/multi-os-engine/moe-tools-natjgen/blob/moe-master/src/main/java/org/moe/tools/natjgen/ConfigurationBuilder.java#L201
+// Ignored in sdk path, so copy file.
+//
+task copySQLiteHeader(group: 'dev', type: Copy) {
+    from '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/sqlite3.h'
+    into 'include/copy'
+}
+
+task copyCoreDataFramework(group: 'dev', type: Sync) {
+    def dir = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/CoreData.framework'
+    def name = file(dir).name
+    from dir
+    into "include/copy/$name"
+}
+
+createNatjgenTask('natjgenSQLite',   'natj_header_sqlite.nbc') {
+    dependsOn copySQLiteHeader
+}
+createNatjgenTask('natjgenCoreData', 'natj_framework_coredata.nbc') {
+    dependsOn copyCoreDataFramework
+}
+
+task natjgenAll(group: 'dev') {
+    dependsOn natjgenSQLite
+    dependsOn natjgenCoreData
+}
